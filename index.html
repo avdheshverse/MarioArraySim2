@@ -1,0 +1,6676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Super Array Bros — Data Structure Simulator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+    rel="stylesheet"
+>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+:root{
+    --sky:#5c94fc;
+    --yellow:#f8d820;
+    --red:#e52521;
+    --green:#43b047;
+    --blue:#0085c7;
+    --orange:#f68f14;
+    --purple:#823c93;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    padding:22px 14px 40px;
+    background:#171717;
+    color:white;
+    font-family:'Press Start 2P',monospace;
+    overflow-x:hidden;
+}
+
+button,
+input{
+    font-family:inherit;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app{
+    width:min(1180px,100%);
+    margin:auto;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header{
+    text-align:center;
+}
+
+.header h1{
+    font-size:
+        clamp(
+            20px,
+            4vw,
+            38px
+        );
+    color:var(--yellow);
+    margin:8px 0 12px;
+    text-shadow:4px 4px #000;
+    line-height:1.4;
+}
+
+.header p{
+    font-size:10px;
+    color:#ddd;
+    line-height:1.7;
+    margin:0;
+}
+
+
+/* =========================================================
+   GAME FRAME
+========================================================= */
+
+.game{
+    position:relative;
+    height:390px;
+    border:6px solid #000;
+    border-radius:9px;
+    background:var(--sky);
+    overflow:hidden;
+    box-shadow:0 0 24px #000;
+}
+
+.sky{
+    position:relative;
+    height:325px;
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   CLOUDS
+========================================================= */
+
+.cloud{
+    position:absolute;
+    font-size:42px;
+    opacity:.78;
+    pointer-events:none;
+}
+
+.cloud.c1{
+    left:7%;
+    top:24px;
+}
+
+.cloud.c2{
+    right:12%;
+    top:58px;
+}
+
+.cloud.c3{
+    left:43%;
+    top:100px;
+    font-size:32px;
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+.hud{
+    position:absolute;
+    top:12px;
+    left:12px;
+    right:12px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    z-index:100;
+    font-size:8px;
+    line-height:1.7;
+}
+
+.hud span{
+    background:#000;
+    padding:8px 10px;
+    border:2px solid white;
+    transition:
+        text-shadow .2s ease,
+        color .2s ease;
+}
+
+#operationHud.star-mode{
+    color:#ffe600;
+    text-shadow:
+        0 0 5px #fff,
+        0 0 12px #ffe600;
+    animation:
+        hudPulse .45s infinite alternate;
+}
+
+@keyframes hudPulse{
+    from{
+        transform:scale(1);
+    }
+    to{
+        transform:scale(1.04);
+    }
+}
+
+
+/* =========================================================
+   ARRAY CONTAINER
+========================================================= */
+
+#blocks{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:7px;
+    height:82px;
+    overflow:visible;
+}
+
+
+/* =========================================================
+   ARRAY BLOCK
+========================================================= */
+
+.block{
+    position:absolute;
+    width:54px;
+    height:54px;
+    top:0;
+    border:4px solid #000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#000;
+    font-size:14px;
+    background:#f89828;
+
+    box-shadow:
+        inset -4px -4px #b85c00,
+        inset 4px 4px #f8d870;
+
+    transition:
+        left .55s cubic-bezier(.22,.75,.25,1),
+        top .45s cubic-bezier(.22,.75,.25,1),
+        transform .35s ease,
+        opacity .35s ease;
+
+    z-index:10;
+
+    will-change:
+        left,
+        top,
+        transform,
+        opacity;
+}
+
+.block .value{
+    pointer-events:none;
+}
+
+.block .index{
+    position:absolute;
+    top:-17px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:7px;
+    color:white;
+    text-shadow:2px 2px #000;
+    white-space:nowrap;
+}
+
+.block .address{
+    position:absolute;
+    bottom:-18px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:7px;
+    color:white;
+    text-shadow:2px 2px #000;
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   ARRAY STATES
+========================================================= */
+
+.block.check{
+    background:#f83800;
+    color:white;
+
+    box-shadow:
+        inset -4px -4px #881400,
+        inset 4px 4px #f87858;
+
+    transform:translateY(-4px);
+}
+
+.block.found{
+    background:#00a800;
+    color:white;
+
+    box-shadow:
+        inset -4px -4px #005800,
+        inset 4px 4px #58d854;
+
+    animation:
+        blockBounce .45s infinite alternate;
+}
+
+.block.disabled{
+    background:#777;
+    color:#ddd;
+    opacity:.48;
+
+    box-shadow:
+        inset -4px -4px #505050,
+        inset 4px 4px #aaa;
+}
+
+.block.removing{
+    transform:
+        scale(0)
+        rotate(180deg);
+    opacity:0;
+}
+
+@keyframes blockBounce{
+    from{
+        transform:translateY(0);
+    }
+
+    to{
+        transform:translateY(-8px);
+    }
+}
+
+
+/* =========================================================
+   MARIO
+========================================================= */
+
+#mario{
+    position:absolute;
+    left:24px;
+    bottom:8px;
+    width:38px;
+    height:48px;
+    z-index:60;
+    opacity:1;
+
+    transition:
+        left .75s cubic-bezier(.22,.75,.25,1),
+        bottom .28s cubic-bezier(.2,.8,.2,1),
+        transform .22s ease;
+
+    filter:
+        drop-shadow(
+            3px 4px 0
+            rgba(0,0,0,.4)
+        );
+
+    pointer-events:none;
+
+    will-change:
+        left,
+        bottom,
+        transform;
+}
+
+
+/* =========================================================
+   PIXEL MARIO
+========================================================= */
+
+.mario-pixel{
+    position:absolute;
+    left:0;
+    top:0;
+    width:4px;
+    height:4px;
+    image-rendering:pixelated;
+
+    box-shadow:
+
+        8px 0 #e52521,
+        12px 0 #e52521,
+        16px 0 #e52521,
+        20px 0 #e52521,
+        24px 0 #e52521,
+
+        4px 4px #e52521,
+        8px 4px #e52521,
+        12px 4px #e52521,
+        16px 4px #e52521,
+        20px 4px #e52521,
+        24px 4px #e52521,
+        28px 4px #e52521,
+
+        8px 8px #f3a36b,
+        12px 8px #f3a36b,
+        16px 8px #f3a36b,
+        20px 8px #f3a36b,
+        24px 8px #f3a36b,
+        28px 8px #f3a36b,
+
+        8px 12px #f3a36b,
+        12px 12px #111,
+        16px 12px #f3a36b,
+        20px 12px #111,
+        24px 12px #f3a36b,
+        28px 12px #f3a36b,
+
+        4px 16px #6b351d,
+        8px 16px #6b351d,
+        12px 16px #f3a36b,
+        16px 16px #f3a36b,
+        20px 16px #f3a36b,
+        24px 16px #f3a36b,
+        28px 16px #6b351d,
+
+        4px 20px #e52521,
+        8px 20px #e52521,
+        12px 20px #e52521,
+        16px 20px #e52521,
+        20px 20px #e52521,
+        24px 20px #e52521,
+        28px 20px #e52521,
+
+        8px 24px #1455a3,
+        12px 24px #1455a3,
+        16px 24px #1455a3,
+        20px 24px #1455a3,
+        24px 24px #1455a3,
+
+        8px 28px #1455a3,
+        12px 28px #1455a3,
+        16px 28px #1455a3,
+        20px 28px #1455a3,
+        24px 28px #1455a3,
+
+        0 24px #f3a36b,
+        4px 24px #e52521,
+        28px 24px #e52521,
+        32px 24px #f3a36b,
+
+        8px 32px #1455a3,
+        12px 32px #1455a3,
+        20px 32px #1455a3,
+        24px 32px #1455a3,
+
+        8px 36px #6b351d,
+        12px 36px #6b351d,
+        20px 36px #6b351d,
+        24px 36px #6b351d,
+
+        4px 40px #111,
+        8px 40px #111,
+        20px 40px #111,
+        24px 40px #111;
+}
+
+
+/* =========================================================
+   MARIO ANIMATIONS
+========================================================= */
+
+#mario.idle{
+    animation:
+        marioIdle .75s ease-in-out infinite alternate;
+}
+
+#mario.running{
+    animation:
+        marioRun .16s infinite alternate;
+}
+
+#mario.jump{
+    animation:
+        marioJump .48s cubic-bezier(.25,.8,.25,1);
+}
+
+#mario.hit{
+    animation:
+        marioHit .4s cubic-bezier(.25,.8,.25,1);
+}
+
+#mario.stomp{
+    animation:
+        marioStomp .5s cubic-bezier(.25,.8,.25,1);
+}
+
+#mario.star{
+    animation:
+        marioStar .22s infinite alternate;
+}
+
+#mario.fail{
+    animation:
+        marioFail .28s infinite alternate;
+}
+
+@keyframes marioIdle{
+    0%{
+        transform:
+            translateY(0)
+            scaleX(1);
+    }
+
+    100%{
+        transform:
+            translateY(-2px)
+            scaleX(.98);
+    }
+}
+
+@keyframes marioRun{
+    0%{
+        transform:
+            translateY(0)
+            scaleX(1);
+    }
+
+    50%{
+        transform:
+            translateY(-3px)
+            scaleX(.95);
+    }
+
+    100%{
+        transform:
+            translateY(0)
+            scaleX(1.02);
+    }
+}
+
+@keyframes marioJump{
+    0%{
+        transform:
+            translateY(0)
+            rotate(0)
+            scale(1);
+    }
+
+    35%{
+        transform:
+            translateY(-18px)
+            rotate(-4deg)
+            scale(1.04);
+    }
+
+    65%{
+        transform:
+            translateY(-12px)
+            rotate(3deg)
+            scale(1.02);
+    }
+
+    100%{
+        transform:
+            translateY(0)
+            rotate(0)
+            scale(1);
+    }
+}
+
+@keyframes marioHit{
+    0%{
+        transform:
+            translateY(0)
+            rotate(0);
+    }
+
+    35%{
+        transform:
+            translateY(-10px)
+            rotate(-8deg);
+    }
+
+    70%{
+        transform:
+            translateY(2px)
+            rotate(5deg);
+    }
+
+    100%{
+        transform:
+            translateY(0)
+            rotate(0);
+    }
+}
+
+@keyframes marioStomp{
+    0%{
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+    35%{
+        transform:
+            translateY(-23px)
+            scale(1.04);
+    }
+
+    65%{
+        transform:
+            translateY(3px)
+            scale(1.08);
+    }
+
+    80%{
+        transform:
+            translateY(-2px)
+            scale(.98);
+    }
+
+    100%{
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+@keyframes marioStar{
+    0%{
+        transform:
+            rotate(-5deg)
+            scale(1);
+
+        filter:
+            drop-shadow(
+                3px 4px 0
+                rgba(0,0,0,.4)
+            )
+            drop-shadow(
+                0 0 5px white
+            );
+    }
+
+    100%{
+        transform:
+            rotate(5deg)
+            scale(1.12);
+
+        filter:
+            drop-shadow(
+                3px 4px 0
+                rgba(0,0,0,.4)
+            )
+            drop-shadow(
+                0 0 16px white
+            );
+    }
+}
+
+@keyframes marioFail{
+    0%{
+        transform:
+            translateX(-2px);
+    }
+
+    50%{
+        transform:
+            translateX(2px);
+    }
+
+    100%{
+        transform:
+            translateX(-2px);
+    }
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+.game-particle{
+    position:absolute;
+    width:7px;
+    height:7px;
+    z-index:55;
+    pointer-events:none;
+
+    animation:
+        particleFly .75s
+        cubic-bezier(.2,.8,.2,1)
+        forwards;
+}
+
+.game-particle.coin{
+    width:8px;
+    height:12px;
+    background:#ffd92e;
+    border:2px solid #8a6200;
+    border-radius:50%;
+}
+
+.game-particle.dust{
+    width:6px;
+    height:6px;
+    background:#fff;
+    border:2px solid #888;
+}
+
+.game-particle.spark{
+    background:#fff;
+    box-shadow:0 0 5px white;
+}
+
+@keyframes particleFly{
+    0%{
+        opacity:1;
+        transform:
+            translate(0,0)
+            scale(1);
+    }
+
+    100%{
+        opacity:0;
+        transform:
+            translate(
+                var(--dx),
+                var(--dy)
+            )
+            scale(.2);
+    }
+}
+
+
+/* =========================================================
+   STAR BURST
+========================================================= */
+
+.star-burst{
+    position:absolute;
+    z-index:58;
+    font-size:18px;
+    pointer-events:none;
+
+    animation:
+        starBurst .8s
+        cubic-bezier(.2,.8,.2,1)
+        forwards;
+}
+
+@keyframes starBurst{
+    0%{
+        opacity:0;
+
+        transform:
+            scale(.2)
+            rotate(0);
+    }
+
+    25%{
+        opacity:1;
+    }
+
+    100%{
+        opacity:0;
+
+        transform:
+            scale(1.8)
+            rotate(180deg)
+            translateY(-25px);
+    }
+}
+
+
+/* =========================================================
+   MARIO ACTION POLISH
+========================================================= */
+
+#mario.impact .mario-pixel{
+    animation:
+        marioImpactFlash .16s
+        steps(2,end) 2;
+}
+
+@keyframes marioImpactFlash{
+    0%,100%{
+        filter:brightness(1);
+    }
+
+    50%{
+        filter:
+            brightness(1.8)
+            drop-shadow(0 0 8px #fff);
+    }
+}
+
+.block.value-pop{
+    z-index:25;
+
+    animation:
+        valuePop .7s
+        cubic-bezier(.2,.9,.25,1);
+}
+
+@keyframes valuePop{
+    0%{
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+    25%{
+        transform:
+            translateY(-24px)
+            scale(1.12);
+    }
+
+    55%{
+        transform:
+            translateY(-12px)
+            scale(1.06);
+    }
+
+    100%{
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+.impact-ring{
+    position:absolute;
+    width:18px;
+    height:18px;
+    border:4px solid #fff;
+    border-radius:50%;
+    z-index:57;
+    pointer-events:none;
+
+    animation:
+        impactRing .55s ease-out forwards;
+
+    transform:
+        translate(-50%,-50%);
+}
+
+@keyframes impactRing{
+    0%{
+        opacity:1;
+
+        transform:
+            translate(-50%,-50%)
+            scale(.3);
+    }
+
+    100%{
+        opacity:0;
+
+        transform:
+            translate(-50%,-50%)
+            scale(3.8);
+    }
+}
+
+
+/* =========================================================
+   BINARY SEARCH MARKERS
+========================================================= */
+
+.binary-markers{
+    position:absolute;
+    inset:0;
+    z-index:45;
+    pointer-events:none;
+}
+
+.binary-marker{
+    position:absolute;
+    min-width:54px;
+    text-align:center;
+    transform:translateX(-50%);
+
+    transition:
+        left .45s cubic-bezier(.22,.75,.25,1),
+        top .3s ease,
+        opacity .2s ease;
+
+    opacity:0;
+
+    font-size:7px;
+    line-height:1.2;
+    text-shadow:2px 2px #000;
+}
+
+.binary-marker.show{
+    opacity:1;
+}
+
+.binary-marker .marker-label{
+    display:block;
+    padding:4px 5px;
+    border:2px solid #000;
+    background:#111;
+    box-shadow:
+        2px 2px 0
+        rgba(0,0,0,.55);
+}
+
+.binary-marker .marker-arrow{
+    display:block;
+    margin-top:2px;
+    font-size:12px;
+    line-height:10px;
+}
+
+.binary-marker.low .marker-label{
+    color:#6ec8ff;
+    border-color:#6ec8ff;
+}
+
+.binary-marker.mid .marker-label{
+    color:#ffe600;
+    border-color:#ffe600;
+}
+
+.binary-marker.high .marker-label{
+    color:#ff7772;
+    border-color:#ff7772;
+}
+
+.binary-marker.low .marker-arrow{
+    color:#6ec8ff;
+}
+
+.binary-marker.mid .marker-arrow{
+    color:#ffe600;
+}
+
+.binary-marker.high .marker-arrow{
+    color:#ff7772;
+}
+
+.binary-marker.low.same-position{
+    margin-left:-24px;
+}
+
+.binary-marker.high.same-position{
+    margin-left:24px;
+}
+
+.binary-range-line{
+    position:absolute;
+    height:3px;
+    background:#ffe600;
+    box-shadow:
+        0 0 5px
+        rgba(255,230,0,.7);
+
+    opacity:0;
+
+    transition:
+        left .45s ease,
+        width .45s ease,
+        opacity .2s ease;
+}
+
+.binary-range-line.show{
+    opacity:.8;
+}
+
+
+/* =========================================================
+   GROUND
+========================================================= */
+
+.ground{
+    height:65px;
+    background:#c84c0c;
+
+    border-top:
+        6px solid #000;
+
+    background-image:
+
+        linear-gradient(
+            45deg,
+            rgba(0,0,0,.18) 25%,
+            transparent 25%,
+            transparent 75%,
+            rgba(0,0,0,.18) 75%
+        ),
+
+        linear-gradient(
+            -45deg,
+            rgba(0,0,0,.18) 25%,
+            transparent 25%,
+            transparent 75%,
+            rgba(0,0,0,.18) 75%
+        );
+
+    background-size:
+        32px 32px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.controls{
+    display:grid;
+    grid-template-columns:
+        repeat(5,1fr);
+    gap:9px;
+}
+
+.btn{
+    min-height:52px;
+
+    padding:
+        8px 6px;
+
+    border:
+        4px solid #000;
+
+    color:white;
+    cursor:pointer;
+
+    font-size:8px;
+    line-height:1.5;
+
+    box-shadow:
+
+        inset -3px -3px
+        rgba(0,0,0,.4),
+
+        inset 3px 3px
+        rgba(255,255,255,.3);
+
+    transition:
+        transform .1s,
+        filter .1s,
+        opacity .1s;
+}
+
+.btn:hover:not(:disabled){
+    filter:
+        brightness(1.15);
+}
+
+.btn:active:not(:disabled){
+    transform:
+        scale(.96);
+}
+
+.btn:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+
+.b-red{
+    background:var(--red);
+}
+
+.b-green{
+    background:var(--green);
+}
+
+.b-blue{
+    background:var(--blue);
+}
+
+.b-orange{
+    background:var(--orange);
+}
+
+.b-purple{
+    background:var(--purple);
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.panel{
+    background:#0b0b0b;
+
+    border:
+        4px dashed
+        var(--yellow);
+
+    border-radius:8px;
+    padding:18px;
+
+    display:none;
+    gap:14px;
+}
+
+.panel.show{
+    display:flex;
+    flex-direction:column;
+}
+
+.panel h2{
+    margin:0;
+    color:var(--yellow);
+    font-size:12px;
+    line-height:1.7;
+}
+
+.fields{
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:12px;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.field label{
+    font-size:8px;
+    color:#ccc;
+    line-height:1.6;
+}
+
+.input{
+    width:100%;
+
+    padding:
+        11px 9px;
+
+    background:#202020;
+    color:#58d854;
+
+    border:
+        2px solid white;
+
+    outline:none;
+    font-size:10px;
+}
+
+.input:focus{
+    border-color:
+        var(--yellow);
+}
+
+.actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+
+/* =========================================================
+   STATUS BAR
+========================================================= */
+
+.statusbar{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+
+    background:#090909;
+
+    border:
+        2px solid #333;
+
+    padding:10px;
+
+    font-size:7px;
+    color:#aaa;
+    line-height:1.7;
+}
+
+.statusbar b{
+    color:white;
+}
+
+
+/* =========================================================
+   LEGEND
+========================================================= */
+
+.legend{
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:8px;
+
+    font-size:7px;
+    color:#bbb;
+
+    background:#0d0d0d;
+
+    border:
+        2px solid #333;
+
+    padding:12px;
+}
+
+.legend span{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.dot{
+    width:12px;
+    height:12px;
+
+    border:
+        2px solid #000;
+
+    display:inline-block;
+}
+
+.d-normal{
+    background:#f89828;
+}
+
+.d-check{
+    background:#f83800;
+}
+
+.d-found{
+    background:#00a800;
+}
+
+.d-disabled{
+    background:#777;
+}
+
+
+/* =========================================================
+   CONSOLE
+========================================================= */
+
+.console-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    color:var(--yellow);
+    font-size:10px;
+}
+
+.link-btn{
+    border:0;
+    background:none;
+    color:white;
+    cursor:pointer;
+
+    font:inherit;
+    font-size:8px;
+}
+
+.link-btn:hover{
+    color:
+        var(--yellow);
+}
+
+.console{
+    height:220px;
+
+    background:#000;
+
+    border:
+        4px solid white;
+
+    border-radius:8px;
+
+    padding:14px;
+
+    overflow:auto;
+
+    font-size:9px;
+    line-height:1.7;
+}
+
+.line{
+    margin-bottom:8px;
+}
+
+.line.action{
+    color:var(--yellow);
+}
+
+.line.success{
+    color:#58d854;
+}
+
+.line.error{
+    color:#ff4b45;
+}
+
+.line.info{
+    color:white;
+}
+
+.line.step{
+    color:#6ec8ff;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:850px){
+
+    .controls{
+        grid-template-columns:
+            repeat(3,1fr);
+    }
+
+    .fields{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:560px){
+
+    body{
+        padding:
+            12px 8px 30px;
+    }
+
+    .game{
+        height:360px;
+    }
+
+    .sky{
+        height:295px;
+    }
+
+    .controls{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+    .fields{
+        grid-template-columns:1fr;
+    }
+
+    .legend{
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+    .console{
+        height:190px;
+    }
+
+    .block{
+        width:48px;
+        height:48px;
+    }
+
+}
+
+@media(max-width:380px){
+
+    .block{
+        width:44px;
+        height:44px;
+        font-size:11px;
+        border-width:3px;
+    }
+
+    .hud{
+        font-size:6px;
+    }
+
+    .hud span{
+        padding:6px;
+    }
+
+}
+
+@media(max-width:560px){
+
+    #mario{
+        transform:
+            scale(.9);
+
+        transform-origin:
+            bottom center;
+    }
+
+}
+
+
+
+/* =========================================================
+   THEORY SECTION
+========================================================= */
+.theory-section{
+    background:#0b0b0b;
+    border:4px dashed var(--yellow);
+    border-radius:8px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+.theory-heading{
+    margin:0;
+    color:var(--yellow);
+    font-size:13px;
+    line-height:1.8;
+}
+.theory-intro{
+    color:#ccc;
+    font-family:Arial,sans-serif;
+    font-size:14px;
+    line-height:1.65;
+    margin:0;
+}
+.theory-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+}
+.theory-card{
+    background:#171717;
+    border:2px solid #444;
+    border-left:5px solid var(--orange);
+    border-radius:5px;
+    overflow:hidden;
+}
+.theory-card summary{
+    cursor:pointer;
+    color:var(--yellow);
+    padding:13px;
+    font-size:9px;
+    line-height:1.7;
+    list-style-position:inside;
+}
+.theory-card summary:hover{background:#242424;}
+.theory-content{
+    padding:0 14px 14px;
+    color:#ddd;
+    font-family:Arial,sans-serif;
+    font-size:14px;
+    line-height:1.65;
+}
+.theory-content h3{
+    color:#6ec8ff;
+    font-family:'Press Start 2P',monospace;
+    font-size:9px;
+    line-height:1.8;
+    margin:14px 0 7px;
+}
+.theory-content p{margin:7px 0;}
+.theory-content ul{padding-left:20px;margin:7px 0;}
+.theory-content li{margin:4px 0;}
+.theory-formula{
+    display:block;
+    margin:9px 0;
+    padding:10px;
+    background:#050505;
+    border:1px solid #555;
+    color:#58d854;
+    font-family:monospace;
+    font-weight:bold;
+    overflow-wrap:anywhere;
+}
+.theory-complexity{
+    color:#ffe36e;
+    font-weight:bold;
+}
+@media(max-width:650px){
+    .theory-grid{grid-template-columns:1fr;}
+    .theory-section{padding:13px;}
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+<header class="header">
+
+    <h1>
+        SUPER ARRAY BROS
+    </h1>
+
+    <p>
+        DATA STRUCTURE SIMULATION
+        • LEARN BY WATCHING THE ALGORITHM
+    </p>
+
+</header>
+
+
+<section class="game">
+
+    <div
+        class="sky"
+        id="sky"
+    >
+
+        <div class="cloud c1">
+            ☁️
+        </div>
+
+        <div class="cloud c2">
+            ☁️
+        </div>
+
+        <div class="cloud c3">
+            ☁️
+        </div>
+
+
+        <div class="hud">
+
+            <span id="sizeHud">
+                SIZE: 0/10
+            </span>
+
+            <span id="operationHud">
+                READY
+            </span>
+
+        </div>
+
+
+        <div
+            id="binaryMarkers"
+            class="binary-markers"
+            aria-hidden="true"
+        ></div>
+
+
+        <div id="blocks"></div>
+
+
+        <div
+            id="mario"
+            class="idle"
+        >
+
+            <div class="mario-pixel"></div>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="ground"></div>
+
+</section>
+
+
+<section class="controls">
+
+    <button
+        class="btn b-red"
+        data-mode="address"
+    >
+
+        1. ADDRESS
+
+        <br>
+
+        CALCULATION
+
+    </button>
+
+
+    <button
+        class="btn b-green"
+        data-mode="insert"
+    >
+
+        2. INSERTION
+
+    </button>
+
+
+    <button
+        class="btn b-blue"
+        data-mode="delete"
+    >
+
+        3. DELETION
+
+    </button>
+
+
+    <button
+        class="btn b-orange"
+        data-mode="linear"
+    >
+
+        4. LINEAR
+
+        <br>
+
+        SEARCH
+
+    </button>
+
+
+    <button
+        class="btn b-purple"
+        data-mode="binary"
+    >
+
+        5. BINARY
+
+        <br>
+
+        SEARCH
+
+    </button>
+
+</section>
+
+
+<section
+    id="panel"
+    class="panel"
+>
+
+    <h2 id="formTitle">
+        OPERATION
+    </h2>
+
+
+    <form id="form">
+
+        <div
+            id="fields"
+            class="fields"
+        ></div>
+
+
+        <div class="actions">
+
+            <button
+                type="button"
+                id="cancelBtn"
+                class="btn"
+                style="
+                    background:#555;
+                    min-height:42px;
+                "
+            >
+                CANCEL
+            </button>
+
+
+            <button
+                type="submit"
+                class="btn"
+                style="
+                    background:#00a800;
+                    min-height:42px;
+                "
+            >
+                EXECUTE
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+
+<div class="statusbar">
+
+    <span>
+
+        ARRAY:
+
+        <b id="arrayText">
+            []
+        </b>
+
+    </span>
+
+
+    <span>
+
+        COMPLEXITY:
+
+        <b id="complexity">
+            —
+        </b>
+
+    </span>
+
+
+    <span>
+
+        MODE:
+
+        <b id="modeText">
+            IDLE
+        </b>
+
+    </span>
+
+</div>
+
+
+<div class="legend">
+
+    <span>
+        <i class="dot d-normal"></i>
+        Normal
+    </span>
+
+    <span>
+        <i class="dot d-check"></i>
+        Checking
+    </span>
+
+    <span>
+        <i class="dot d-found"></i>
+        Found
+    </span>
+
+    <span>
+        <i class="dot d-disabled"></i>
+        Discarded
+    </span>
+
+</div>
+
+
+
+
+
+
+
+<section>
+
+    <div class="console-title">
+
+        <span>
+            CONSOLE LOG
+        </span>
+
+
+        <button
+            class="link-btn"
+            id="resetBtn"
+        >
+            [RESET GAME]
+        </button>
+
+    </div>
+
+
+    <div
+        id="console"
+        class="console"
+    ></div>
+
+</section>
+
+
+<section class="theory-section" id="theory">
+    <h2 class="theory-heading">📘 THEORY ZONE — LEARN THE OPERATIONS</h2>
+    <p class="theory-intro">
+        Read the concepts, formulas, working steps and time complexities behind every operation
+        demonstrated in Super Array Bros. Expand any topic to study it.
+    </p>
+
+    <div class="theory-grid">
+        <details class="theory-card">
+            <summary>1. ARRAY ADDRESS CALCULATION</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Address calculation determines the memory location of an array element. An array stores elements in contiguous memory locations, and every element occupies the same number of bytes.</p>
+                <h3>Formula (1-D Array)</h3>
+                <span class="theory-formula">LOC(A[i]) = Base Address + W × (i − LB)</span>
+                <ul>
+                    <li><b>Base Address:</b> memory address of the first array element.</li>
+                    <li><b>W:</b> size of each element in bytes.</li>
+                    <li><b>i:</b> index whose address is required.</li>
+                    <li><b>LB:</b> lower bound (starting index) of the array.</li>
+                </ul>
+                <h3>Example</h3>
+                <p>If Base = 1000, W = 4, LB = 0 and i = 3:</p>
+                <span class="theory-formula">1000 + 4 × (3 − 0) = 1012</span>
+                <p>The address of the element at index 3 is 1012. The calculation takes <span class="theory-complexity">O(1)</span> time because it uses a fixed number of arithmetic operations.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>2. ARRAY INSERTION</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Insertion adds a new element at a specified index. To make room, existing elements from that index onward are shifted one position to the right.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Check that the requested index is valid (0 through the current array length).</li>
+                    <li>Check that the array has available capacity.</li>
+                    <li>Shift elements right, starting from the last element and moving backwards.</li>
+                    <li>Place the new value at the selected index and increase the array size.</li>
+                </ul>
+                <h3>Example</h3>
+                <span class="theory-formula">[10, 20, 30, 40] → insert 99 at index 2 → [10, 20, 99, 30, 40]</span>
+                <p>Elements 30 and 40 move one position to the right. Insertion at the end needs no shifting; insertion at the beginning may shift every element.</p>
+                <p><b>Time complexity:</b> <span class="theory-complexity">O(n)</span> worst case; <span class="theory-complexity">O(1)</span> when inserting at the end if capacity is available.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>3. ARRAY DELETION</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Deletion removes the element at a specified index. The elements after the removed position shift one position to the left so that no gap remains.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Check that the array is not empty and the index is within its valid range.</li>
+                    <li>Remove the selected element.</li>
+                    <li>Shift every following element one position to the left.</li>
+                    <li>Decrease the logical size of the array.</li>
+                </ul>
+                <h3>Example</h3>
+                <span class="theory-formula">[10, 20, 30, 40] → delete index 1 → [10, 30, 40]</span>
+                <p>Deletion at the last position requires no shifting, while deletion near the beginning requires more movement.</p>
+                <p><b>Time complexity:</b> <span class="theory-complexity">O(n)</span> worst case; <span class="theory-complexity">O(1)</span> for deleting the last element.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>4. LINEAR SEARCH</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Linear Search checks array elements one by one from the beginning until the target is found or all elements have been checked. The array does not need to be sorted.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Start at index 0.</li>
+                    <li>Compare the current element with the target value.</li>
+                    <li>If equal, report the index and stop.</li>
+                    <li>Otherwise move to the next element; if the end is reached, report not found.</li>
+                </ul>
+                <h3>Example</h3>
+                <span class="theory-formula">Array: [12, 25, 38, 44], Target: 38 → checks 12, 25, 38 → found at index 2</span>
+                <p><b>Time complexity:</b> best case <span class="theory-complexity">O(1)</span>, average and worst case <span class="theory-complexity">O(n)</span>. Auxiliary space: <span class="theory-complexity">O(1)</span>.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>5. BINARY SEARCH</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Binary Search finds a target in a sorted array by repeatedly dividing the remaining search range into two halves. This simulator sorts the array first when it is not already sorted, using the sorting method selected in the operation panel.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Set <b>low</b> to the first index and <b>high</b> to the last index.</li>
+                    <li>Calculate <b>mid = floor((low + high) / 2)</b>.</li>
+                    <li>If the middle value equals the target, the search is complete.</li>
+                    <li>If the target is larger, continue in the right half; if smaller, continue in the left half.</li>
+                    <li>Repeat while low is less than or equal to high. If the range becomes empty, the value is absent.</li>
+                </ul>
+                <span class="theory-formula">mid = floor((low + high) / 2)</span>
+                <p><b>Requirement:</b> The data must be sorted in ascending order.</p>
+                <p><b>Time complexity:</b> <span class="theory-complexity">O(log n)</span> for the search itself; auxiliary space <span class="theory-complexity">O(1)</span> for this iterative search. Any preliminary sorting has its own additional cost.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>6. BUBBLE SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Bubble Sort repeatedly compares adjacent elements and swaps them when they are in the wrong order. After each pass, the largest remaining value moves toward the end.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Compare each pair of adjacent elements.</li>
+                    <li>Swap them if the left element is greater than the right element.</li>
+                    <li>Continue through the array for each pass.</li>
+                    <li>Stop when a pass completes without a swap or all passes are done.</li>
+                </ul>
+                <span class="theory-formula">[5, 1, 4, 2] → [1, 4, 2, 5] → ... → [1, 2, 4, 5]</span>
+                <p><b>Complexity:</b> Best <span class="theory-complexity">O(n)</span> with an early-stop check; average/worst <span class="theory-complexity">O(n²)</span>. Space <span class="theory-complexity">O(1)</span>. Stable sorting algorithm.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>7. INSERTION SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Insertion Sort builds a sorted portion of the array one element at a time. Each new element is inserted into its correct position among the elements already processed.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Assume the first element is already sorted.</li>
+                    <li>Take the next element as the key.</li>
+                    <li>Shift larger elements in the sorted portion one position to the right.</li>
+                    <li>Insert the key into the empty position and continue.</li>
+                </ul>
+                <span class="theory-formula">[5, 2, 4] → [2, 5, 4] → [2, 4, 5]</span>
+                <p><b>Complexity:</b> Best <span class="theory-complexity">O(n)</span>; average/worst <span class="theory-complexity">O(n²)</span>. Space <span class="theory-complexity">O(1)</span>. Stable and adaptive for nearly sorted data.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>8. SELECTION SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Selection Sort repeatedly finds the smallest element in the unsorted portion and places it at the beginning of that portion.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Start at the first unsorted index.</li>
+                    <li>Scan the remaining elements to find the minimum value.</li>
+                    <li>Swap the minimum with the first unsorted element.</li>
+                    <li>Move the boundary of the sorted portion one position right and repeat.</li>
+                </ul>
+                <span class="theory-formula">[4, 2, 5, 1] → [1, 2, 5, 4] → [1, 2, 4, 5]</span>
+                <p><b>Complexity:</b> Best/average/worst <span class="theory-complexity">O(n²)</span>; space <span class="theory-complexity">O(1)</span>. The standard swap-based version is generally not stable.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>9. QUICK SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Quick Sort is a divide-and-conquer sorting algorithm. It selects a pivot, partitions the array so smaller values are placed before the pivot and larger values after it, then recursively sorts the two partitions.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Choose a pivot (this implementation uses the last element of the current range).</li>
+                    <li>Scan the range and move values smaller than or equal to the pivot to its left.</li>
+                    <li>Place the pivot in its final sorted position.</li>
+                    <li>Recursively sort the left and right partitions.</li>
+                </ul>
+                <p><b>Complexity:</b> Average/best <span class="theory-complexity">O(n log n)</span>; worst <span class="theory-complexity">O(n²)</span> (for highly unbalanced partitions). Typical recursion space is <span class="theory-complexity">O(log n)</span> average and <span class="theory-complexity">O(n)</span> worst. Usually not stable.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>10. MERGE SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Merge Sort uses divide and conquer. It divides the array into smaller halves until each part contains one element, then merges those parts in sorted order.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Find the midpoint and divide the current range into two halves.</li>
+                    <li>Recursively sort the left half and right half.</li>
+                    <li>Compare the first remaining values in both halves.</li>
+                    <li>Copy the smaller value into the merged range and continue until both halves are exhausted.</li>
+                </ul>
+                <span class="theory-formula">[8, 3, 6, 2] → [8, 3] + [6, 2] → [3, 8] + [2, 6] → [2, 3, 6, 8]</span>
+                <p><b>Complexity:</b> Best/average/worst <span class="theory-complexity">O(n log n)</span>; auxiliary space <span class="theory-complexity">O(n)</span>. Stable when equal values are merged in original relative order.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>11. SHELL SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Shell Sort improves on Insertion Sort by comparing and moving elements that are far apart first. The gap is gradually reduced until it becomes 1, when the final pass is an ordinary insertion-sort-style pass.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Choose an initial gap (this implementation starts at floor(n / 2)).</li>
+                    <li>Perform a gapped insertion sort, comparing elements separated by that gap.</li>
+                    <li>Reduce the gap by half (integer division) and repeat.</li>
+                    <li>Finish when the gap reaches 1.</li>
+                </ul>
+                <p><b>Complexity:</b> Depends on the gap sequence. With the halving sequence used here, a simple general upper bound is <span class="theory-complexity">O(n²)</span>; actual performance is often better than basic insertion sort. Space <span class="theory-complexity">O(1)</span>. Not stable in general.</p>
+            </div>
+        </details>
+
+        <details class="theory-card">
+            <summary>12. RADIX SORT</summary>
+            <div class="theory-content">
+                <p><b>Meaning:</b> Radix Sort is a non-comparison sorting algorithm. This implementation uses the least-significant-digit (LSD) method: it sorts values by one decimal digit at a time, starting with the units place, using a stable counting pass.</p>
+                <h3>Working</h3>
+                <ul>
+                    <li>Read the integer values and find the minimum value.</li>
+                    <li>Shift each value by subtracting the minimum, preserving relative order while making offsets non-negative.</li>
+                    <li>Count occurrences of each digit (0–9) at the current place value.</li>
+                    <li>Convert counts to positions and build the output from right to left to preserve stability.</li>
+                    <li>Copy the output back and repeat for tens, hundreds and further places until all digits are processed.</li>
+                </ul>
+                <p>This implementation supports positive, zero and negative integer values, but rejects non-integer values.</p>
+                <span class="theory-formula">Time: O(d × (n + 10)) ≈ O(dn) for base 10; Space: O(n + 10)</span>
+                <p>Here <b>n</b> is the number of elements and <b>d</b> is the number of digit passes required by the shifted values. Radix Sort is stable when each digit pass is stable.</p>
+            </div>
+        </details>
+    </div>
+</section>
+
+
+</div>
+
+
+<script>
+
+'use strict';
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+let audioCtx = null;
+
+function initAudio(){
+
+    if(!audioCtx){
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if(!AudioContext)
+            return;
+
+        audioCtx =
+            new AudioContext();
+
+    }
+
+}
+
+
+function resumeAudio(){
+
+    initAudio();
+
+    if(
+        audioCtx &&
+        audioCtx.state === 'suspended'
+    ){
+
+        audioCtx.resume();
+
+    }
+
+}
+
+
+function tone(
+    frequency,
+    duration=0.08,
+    type='square',
+    volume=0.045,
+    slide=0
+){
+
+    if(!audioCtx)
+        return;
+
+    const osc =
+        audioCtx.createOscillator();
+
+    const gain =
+        audioCtx.createGain();
+
+    const now =
+        audioCtx.currentTime;
+
+
+    osc.type =
+        type;
+
+    osc.frequency.setValueAtTime(
+        frequency,
+        now
+    );
+
+    osc.frequency.linearRampToValueAtTime(
+        Math.max(
+            30,
+            frequency + slide
+        ),
+        now + duration
+    );
+
+
+    gain.gain.setValueAtTime(
+        0.0001,
+        now
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        now + 0.008
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + duration
+    );
+
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+
+    osc.start(now);
+
+    osc.stop(
+        now + duration + 0.02
+    );
+
+}
+
+
+function soundClick(){
+
+    resumeAudio();
+
+    tone(
+        520,
+        .045,
+        'square',
+        .035,
+        -80
+    );
+
+}
+
+
+function soundRunStep(){
+
+    resumeAudio();
+
+    tone(
+        115,
+        .035,
+        'square',
+        .018,
+        -25
+    );
+
+}
+
+
+function soundJump(){
+
+    resumeAudio();
+
+    tone(
+        330,
+        .08,
+        'square',
+        .045,
+        220
+    );
+
+    setTimeout(
+        () =>
+            tone(
+                550,
+                .12,
+                'square',
+                .04,
+                180
+            ),
+        45
+    );
+
+}
+
+
+function soundHit(){
+
+    resumeAudio();
+
+    tone(
+        170,
+        .07,
+        'square',
+        .055,
+        -80
+    );
+
+    setTimeout(
+        () =>
+            tone(
+                95,
+                .09,
+                'square',
+                .04,
+                -30
+            ),
+        35
+    );
+
+}
+
+
+function soundCoin(){
+
+    resumeAudio();
+
+    tone(
+        880,
+        .07,
+        'square',
+        .045,
+        180
+    );
+
+    setTimeout(
+        () =>
+            tone(
+                1320,
+                .12,
+                'square',
+                .04,
+                100
+            ),
+        65
+    );
+
+}
+
+
+function soundStomp(){
+
+    resumeAudio();
+
+    tone(
+        110,
+        .12,
+        'sawtooth',
+        .06,
+        -70
+    );
+
+    setTimeout(
+        () =>
+            tone(
+                65,
+                .16,
+                'square',
+                .045,
+                -20
+            ),
+        55
+    );
+
+}
+
+
+function soundSearch(){
+
+    resumeAudio();
+
+    tone(
+        420,
+        .055,
+        'square',
+        .025,
+        70
+    );
+
+}
+
+
+function soundCompare(){
+
+    resumeAudio();
+
+    tone(
+        260,
+        .035,
+        'square',
+        .018,
+        35
+    );
+
+}
+
+
+function soundSwap(){
+
+    resumeAudio();
+
+    tone(
+        190,
+        .055,
+        'square',
+        .028,
+        100
+    );
+
+}
+
+
+function soundSuccess(){
+
+    resumeAudio();
+
+    [
+        523,
+        659,
+        784,
+        1046
+    ].forEach(
+        (frequency,index) =>
+            setTimeout(
+                () =>
+                    tone(
+                        frequency,
+                        .12,
+                        'square',
+                        .045
+                    ),
+                index * 75
+            )
+    );
+
+}
+
+
+function soundFail(){
+
+    resumeAudio();
+
+    tone(
+        330,
+        .12,
+        'square',
+        .04,
+        -110
+    );
+
+    setTimeout(
+        () =>
+            tone(
+                220,
+                .16,
+                'square',
+                .035,
+                -80
+            ),
+        90
+    );
+
+}
+
+
+function soundSortComplete(){
+
+    resumeAudio();
+
+    [
+        392,
+        494,
+        587,
+        784
+    ].forEach(
+        (frequency,index) =>
+            setTimeout(
+                () =>
+                    tone(
+                        frequency,
+                        .09,
+                        'square',
+                        .035
+                    ),
+                index * 65
+            )
+    );
+
+}
+
+
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const MAX_SIZE = 10;
+
+const DEFAULT_BASE = 1000;
+
+const DEFAULT_ELEMENT_SIZE = 4;
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let arrayState = [];
+
+let locked = false;
+
+let currentMode = '';
+
+let baseAddress =
+    DEFAULT_BASE;
+
+let elementSize =
+    DEFAULT_ELEMENT_SIZE;
+
+let animationToken = 0;
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const $ =
+    id =>
+        document.getElementById(id);
+
+const blocks =
+    $('blocks');
+
+const binaryMarkers =
+    $('binaryMarkers');
+
+const mario =
+    $('mario');
+
+const sky =
+    $('sky');
+
+const consoleEl =
+    $('console');
+
+const panel =
+    $('panel');
+
+const form =
+    $('form');
+
+const fields =
+    $('fields');
+
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const configs = {
+
+    address:{
+
+        title:
+            'ADDRESS CALCULATION',
+
+        complexity:
+            'O(1)',
+
+        fields:[
+            [
+                'base',
+                'Base Address',
+                'number',
+                1000
+            ],
+
+            [
+                'size',
+                'Element Size (W)',
+                'number',
+                4
+            ],
+
+            [
+                'lb',
+                'Lower Bound (LB)',
+                'number',
+                0
+            ],
+
+            [
+                'index',
+                'Target Index (i)',
+                'number',
+                3
+            ]
+        ]
+
+    },
+
+
+    insert:{
+
+        title:
+            'ARRAY INSERTION',
+
+        complexity:
+            'O(n)',
+
+        fields:[
+            [
+                'index',
+                'Insert Index',
+                'number',
+                0
+            ],
+
+            [
+                'value',
+                'Value',
+                'number',
+                99
+            ]
+        ]
+
+    },
+
+
+    delete:{
+
+        title:
+            'ARRAY DELETION',
+
+        complexity:
+            'O(n)',
+
+        fields:[
+            [
+                'index',
+                'Delete Index',
+                'number',
+                0
+            ]
+        ]
+
+    },
+
+
+    linear:{
+
+        title:
+            'LINEAR SEARCH',
+
+        complexity:
+            'O(n)',
+
+        fields:[
+            [
+                'value',
+                'Search Value',
+                'number',
+                89
+            ]
+        ]
+
+    },
+
+
+    binary:{
+
+        title:
+            'BINARY SEARCH',
+
+        complexity:
+            'O(log n)',
+
+        fields:[
+            [
+                'value',
+                'Search Value',
+                'number',
+                89
+            ],
+
+            [
+                'sort',
+                'Sorting Method',
+                'select',
+                'bubble',
+
+                [
+                    ['bubble','Bubble Sort'],
+                    ['insertion','Insertion Sort'],
+                    ['selection','Selection Sort'],
+                    ['quick','Quick Sort'],
+                    ['merge','Merge Sort'],
+                    ['shell','Shell Sort'],
+                    ['radix','Radix Sort']
+                ]
+            ]
+        ]
+
+    }
+
+};
+
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+function sleep(ms){
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+
+}
+
+
+function uid(){
+
+    if(
+        window.crypto &&
+        typeof crypto.randomUUID ===
+        'function'
+    ){
+
+        return crypto.randomUUID();
+
+    }
+
+    return (
+
+        Date.now()
+        .toString(36)
+
+        +
+
+        Math.random()
+        .toString(36)
+        .slice(2)
+
+    );
+
+}
+
+
+/* =========================================================
+   ANIMATION TOKEN
+========================================================= */
+
+function beginAnimation(){
+
+    animationToken++;
+
+    return animationToken;
+
+}
+
+
+function valid(token){
+
+    return (
+        token ===
+        animationToken
+    );
+
+}
+
+
+/* =========================================================
+   MARIO STATE
+========================================================= */
+
+function marioIdle(){
+
+    mario.classList.remove(
+
+        'running',
+
+        'jump',
+
+        'hit',
+
+        'stomp',
+
+        'star',
+
+        'fail'
+
+    );
+
+    mario.classList.add(
+        'idle'
+    );
+
+    mario.style.opacity =
+        '1';
+
+}
+
+
+function marioResetToHome(){
+
+    mario.classList.remove(
+
+        'running',
+
+        'jump',
+
+        'hit',
+
+        'stomp',
+
+        'star',
+
+        'fail'
+
+    );
+
+    mario.classList.add(
+        'idle'
+    );
+
+    mario.style.left =
+        '24px';
+
+    mario.style.bottom =
+        '8px';
+
+    mario.style.opacity =
+        '1';
+
+}
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+function getLayout(){
+
+    const sample =
+        blocks.querySelector(
+            '.block'
+        );
+
+
+    let width =
+        54;
+
+    let gap =
+        12;
+
+
+    if(sample){
+
+        width =
+            sample
+            .getBoundingClientRect()
+            .width;
+
+    }
+
+    else if(
+        window.innerWidth <= 380
+    ){
+
+        width =
+            44;
+
+        gap =
+            10;
+
+    }
+
+    else if(
+        window.innerWidth <= 560
+    ){
+
+        width =
+            48;
+
+        gap =
+            10;
+
+    }
+
+
+    const stride =
+        width + gap;
+
+
+    const containerWidth =
+        blocks
+        .getBoundingClientRect()
+        .width;
+
+
+    const total =
+        arrayState.length
+
+            ?
+
+        (
+            arrayState.length *
+            stride
+            -
+            gap
+        )
+
+            :
+
+        0;
+
+
+    const start =
+        Math.max(
+
+            4,
+
+            (
+                containerWidth -
+                total
+            ) / 2
+
+        );
+
+
+    return {
+
+        width,
+
+        gap,
+
+        stride,
+
+        start
+
+    };
+
+}
+
+
+/* =========================================================
+   MARIO POSITION
+========================================================= */
+
+function marioPositionForIndex(
+    index
+){
+
+    const layout =
+        getLayout();
+
+
+    return (
+
+        layout.start
+
+        +
+
+        index *
+        layout.stride
+
+        +
+
+        layout.width / 2
+
+        -
+
+        19
+
+    );
+
+}
+
+
+/* =========================================================
+   MARIO RUN
+========================================================= */
+
+async function marioRunTo(
+    index,
+    token
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    if(
+        index < 0 ||
+        index >= arrayState.length
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'idle',
+        'jump',
+        'hit',
+        'stomp',
+        'star',
+        'fail'
+    );
+
+
+    mario.classList.add(
+        'running'
+    );
+
+
+    mario.style.opacity =
+        '1';
+
+
+    const runSoundTimer =
+        setInterval(
+            soundRunStep,
+            130
+        );
+
+
+    mario.style.left =
+        `${marioPositionForIndex(index)}px`;
+
+
+    await sleep(650);
+
+
+    clearInterval(
+        runSoundTimer
+    );
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'running'
+    );
+
+
+    mario.classList.add(
+        'jump'
+    );
+
+
+    soundJump();
+
+
+    await sleep(480);
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'jump'
+    );
+
+
+    createDust(
+        marioScreenPosition()
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MARIO RETURN HOME
+========================================================= */
+
+async function marioReturnHome(
+    token
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+
+        'idle',
+
+        'jump',
+
+        'hit',
+
+        'stomp',
+
+        'star',
+
+        'fail'
+
+    );
+
+
+    mario.classList.add(
+        'running'
+    );
+
+
+    const returnSoundTimer =
+        setInterval(
+            soundRunStep,
+            130
+        );
+
+
+    mario.style.left =
+        '24px';
+
+
+    await sleep(700);
+
+
+    clearInterval(
+        returnSoundTimer
+    );
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'running'
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MARIO HIT
+========================================================= */
+
+async function marioHit(
+    token
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'idle',
+        'running',
+        'jump',
+        'stomp',
+        'star',
+        'fail'
+    );
+
+
+    mario.classList.add(
+        'hit'
+    );
+
+    mario.classList.add(
+        'impact'
+    );
+
+
+    soundHit();
+
+
+    createImpactRing();
+
+
+    createDust(
+        marioScreenPosition()
+    );
+
+
+    createParticle(
+        'spark',
+        marioScreenPosition().x,
+        marioScreenPosition().y,
+        -18,
+        -18
+    );
+
+
+    createParticle(
+        'spark',
+        marioScreenPosition().x,
+        marioScreenPosition().y,
+        18,
+        -18
+    );
+
+
+    await sleep(430);
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'hit',
+        'impact'
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MARIO STOMP
+========================================================= */
+
+async function marioStomp(
+    token
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'idle',
+        'running',
+        'jump',
+        'hit',
+        'star',
+        'fail'
+    );
+
+
+    mario.classList.add(
+        'stomp'
+    );
+
+
+    await sleep(300);
+
+
+    if(!valid(token))
+        return false;
+
+
+    mario.classList.add(
+        'impact'
+    );
+
+
+    soundStomp();
+
+
+    createImpactRing();
+
+
+    createDust(
+        marioScreenPosition()
+    );
+
+
+    for(let i=0;i<5;i++){
+
+        createParticle(
+            'dust',
+            marioScreenPosition().x,
+            marioScreenPosition().y,
+            (Math.random()-.5)*55,
+            -10-Math.random()*25
+        );
+
+    }
+
+
+    await sleep(330);
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'stomp',
+        'impact'
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MARIO STAR POWER
+========================================================= */
+
+async function marioStarPower(
+    token,
+    index
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'idle',
+        'running',
+        'jump',
+        'hit',
+        'stomp',
+        'fail'
+    );
+
+
+    mario.classList.add(
+        'star'
+    );
+
+
+    $('operationHud')
+        .classList
+        .add(
+            'star-mode'
+        );
+
+
+    createStarBurst(
+        index
+    );
+
+
+    createCoins(
+        index,
+        8
+    );
+
+
+    await sleep(1050);
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    $('operationHud')
+        .classList
+        .remove(
+            'star-mode'
+        );
+
+
+    mario.classList.remove(
+        'star'
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MARIO FAIL
+========================================================= */
+
+async function marioFail(
+    token
+){
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'idle',
+        'running',
+        'jump',
+        'hit',
+        'stomp',
+        'star'
+    );
+
+
+    mario.classList.add(
+        'fail'
+    );
+
+
+    await sleep(700);
+
+
+    if(
+        !valid(token)
+    ){
+
+        return false;
+
+    }
+
+
+    mario.classList.remove(
+        'fail'
+    );
+
+
+    mario.classList.add(
+        'idle'
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function createParticle(
+    type,
+    x,
+    y,
+    dx,
+    dy
+){
+
+    const particle =
+        document.createElement(
+            'div'
+        );
+
+
+    particle.className =
+        `game-particle ${type}`;
+
+
+    particle.style.left =
+        `${x}px`;
+
+
+    particle.style.top =
+        `${y}px`;
+
+
+    particle.style.setProperty(
+        '--dx',
+        `${dx}px`
+    );
+
+
+    particle.style.setProperty(
+        '--dy',
+        `${dy}px`
+    );
+
+
+    sky.appendChild(
+        particle
+    );
+
+
+    setTimeout(
+        () => {
+
+            if(
+                particle.parentNode
+            ){
+
+                particle.remove();
+
+            }
+
+        },
+        800
+    );
+
+}
+
+
+/* =========================================================
+   MARIO SCREEN POSITION
+========================================================= */
+
+function marioScreenPosition(){
+
+    const marioRect =
+        mario.getBoundingClientRect();
+
+
+    const skyRect =
+        sky.getBoundingClientRect();
+
+
+    return {
+
+        x:
+            marioRect.left
+            -
+            skyRect.left
+            +
+            marioRect.width / 2,
+
+        y:
+            marioRect.top
+            -
+            skyRect.top
+            +
+            marioRect.height
+
+    };
+
+}
+
+
+/* =========================================================
+   DUST
+========================================================= */
+
+function createDust(
+    position
+){
+
+    if(!position)
+        return;
+
+
+    const vectors = [
+
+        [-18,-3],
+
+        [-10,-8],
+
+        [10,-8],
+
+        [18,-3]
+
+    ];
+
+
+    vectors.forEach(
+        ([dx,dy]) => {
+
+            createParticle(
+
+                'dust',
+
+                position.x,
+
+                position.y,
+
+                dx,
+
+                dy
+
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   COINS
+========================================================= */
+
+function createCoins(
+    index,
+    count=6
+){
+
+    const layout =
+        getLayout();
+
+
+    const x =
+        layout.start
+        +
+        index *
+        layout.stride
+        +
+        layout.width/2;
+
+
+    const y =
+        90;
+
+
+    for(
+        let i=0;
+        i<count;
+        i++
+    ){
+
+        const angle =
+            (
+                Math.PI * 2 /
+                count
+            ) * i;
+
+
+        const radius =
+            20 +
+            Math.random() * 30;
+
+
+        soundCoin();
+
+
+        createParticle(
+
+            'coin',
+
+            x,
+
+            y,
+
+            Math.cos(angle) *
+                radius,
+
+            -30 -
+                Math.random()*45
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STAR BURST
+========================================================= */
+
+function createStarBurst(
+    index
+){
+
+    const layout =
+        getLayout();
+
+
+    const star =
+        document.createElement(
+            'div'
+        );
+
+
+    star.className =
+        'star-burst';
+
+
+    star.textContent =
+        '★';
+
+
+    star.style.left =
+        `${layout.start
+        +
+        index *
+        layout.stride
+        +
+        layout.width/2}px`;
+
+
+    star.style.top =
+        '70px';
+
+
+    sky.appendChild(
+        star
+    );
+
+
+    setTimeout(
+        () => {
+
+            if(
+                star.parentNode
+            ){
+
+                star.remove();
+
+            }
+
+        },
+        850
+    );
+
+}
+
+
+/* =========================================================
+   BINARY SEARCH MARKERS
+========================================================= */
+
+function ensureBinaryMarker(
+    role
+){
+
+    let marker =
+        binaryMarkers.querySelector(
+            `.binary-marker.${role}`
+        );
+
+
+    if(!marker){
+
+        marker =
+            document.createElement(
+                'div'
+            );
+
+
+        marker.className =
+            `binary-marker ${role}`;
+
+
+        marker.innerHTML = `
+            <span class="marker-label">
+                ${role.toUpperCase()}
+            </span>
+
+            <span class="marker-arrow">
+                ↓
+            </span>
+        `;
+
+
+        binaryMarkers.appendChild(
+            marker
+        );
+
+    }
+
+
+    return marker;
+
+}
+
+
+function showBinaryMarkers(
+    low,
+    mid,
+    high
+){
+
+    const markerData = [
+
+        ['low',low],
+
+        ['mid',mid],
+
+        ['high',high]
+
+    ];
+
+
+    const skyRect =
+        sky.getBoundingClientRect();
+
+
+    markerData.forEach(
+        ([role,index]) => {
+
+            const marker =
+                ensureBinaryMarker(
+                    role
+                );
+
+
+            const element =
+                document.getElementById(
+                    `block-${arrayState[index].id}`
+                );
+
+
+            if(!element)
+                return;
+
+
+            const rect =
+                element.getBoundingClientRect();
+
+
+            marker.style.left =
+                `${rect.left - skyRect.left + rect.width/2}px`;
+
+
+            marker.style.top =
+                `${Math.max(
+                    145,
+                    rect.top -
+                    skyRect.top -
+                    48
+                )}px`;
+
+
+            marker.dataset.index =
+                String(index);
+
+
+            marker.classList.toggle(
+                'same-position',
+                low === high &&
+                role !== 'mid'
+            );
+
+
+            marker.classList.add(
+                'show'
+            );
+
+        }
+    );
+
+}
+
+
+function repositionBinaryMarkers(){
+
+    if(!binaryMarkers)
+        return;
+
+
+    const visible =
+        binaryMarkers.querySelectorAll(
+            '.binary-marker.show'
+        );
+
+
+    const skyRect =
+        sky.getBoundingClientRect();
+
+
+    visible.forEach(
+        marker => {
+
+            const index =
+                Number(
+                    marker.dataset.index
+                );
+
+
+            if(
+                !Number.isInteger(index)
+                ||
+                !arrayState[index]
+            )
+                return;
+
+
+            const element =
+                document.getElementById(
+                    `block-${arrayState[index].id}`
+                );
+
+
+            if(!element)
+                return;
+
+
+            const rect =
+                element.getBoundingClientRect();
+
+
+            marker.style.left =
+                `${rect.left - skyRect.left + rect.width/2}px`;
+
+
+            marker.style.top =
+                `${Math.max(
+                    145,
+                    rect.top -
+                    skyRect.top -
+                    48
+                )}px`;
+
+        }
+    );
+
+}
+
+
+function hideBinaryMarkers(){
+
+    if(!binaryMarkers)
+        return;
+
+
+    binaryMarkers
+        .querySelectorAll(
+            '.binary-marker'
+        )
+        .forEach(
+            marker =>
+                marker.classList.remove(
+                    'show'
+                )
+        );
+
+}
+
+
+function createImpactRing(){
+
+    const position =
+        marioScreenPosition();
+
+
+    const ring =
+        document.createElement(
+            'div'
+        );
+
+
+    ring.className =
+        'impact-ring';
+
+
+    ring.style.left =
+        `${position.x}px`;
+
+
+    ring.style.top =
+        `${position.y}px`;
+
+
+    sky.appendChild(
+        ring
+    );
+
+
+    setTimeout(
+        () => {
+
+            if(
+                ring.parentNode
+            )
+                ring.remove();
+
+        },
+        650
+    );
+
+}
+
+
+/* =========================================================
+   LOCK
+========================================================= */
+
+function setLocked(
+    value
+){
+
+    locked =
+        value;
+
+
+    document
+        .querySelectorAll(
+            '.controls .btn'
+        )
+        .forEach(
+            button => {
+
+                button.disabled =
+                    value;
+
+            }
+        );
+
+
+    $('resetBtn')
+        .disabled =
+        value;
+
+
+    $('operationHud')
+        .textContent =
+        value
+            ?
+            'RUNNING...'
+            :
+            'READY';
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function updateStatus(){
+
+    $('arrayText')
+        .textContent =
+
+        `[${arrayState
+            .map(
+                item =>
+                    item.value
+            )
+            .join(', ')}]`;
+
+
+    $('sizeHud')
+        .textContent =
+
+        `SIZE: ${arrayState.length}/${MAX_SIZE}`;
+
+}
+
+
+/* =========================================================
+   LOG
+========================================================= */
+
+function log(
+    message,
+    type='info'
+){
+
+    const line =
+        document.createElement(
+            'div'
+        );
+
+
+    line.className =
+        `line ${type}`;
+
+
+    line.textContent =
+        message;
+
+
+    consoleEl.appendChild(
+        line
+    );
+
+
+    consoleEl.scrollTop =
+        consoleEl.scrollHeight;
+
+}
+
+
+function clearLog(){
+
+    consoleEl.innerHTML =
+        '';
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render(
+    base=baseAddress,
+    size=elementSize
+){
+
+    const layout =
+        getLayout();
+
+
+    arrayState.forEach(
+        (
+            item,
+            index
+        ) => {
+
+
+            let element =
+                document.getElementById(
+                    `block-${item.id}`
+                );
+
+
+            if(!element){
+
+                element =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                element.id =
+                    `block-${item.id}`;
+
+
+                element.className =
+                    'block';
+
+
+                element.style.left =
+                    `${layout.start
+                    +
+                    index *
+                    layout.stride}px`;
+
+
+                element.style.top =
+                    '-70px';
+
+
+                element.style.opacity =
+                    '0';
+
+
+                element.innerHTML = `
+
+                    <span class="value"></span>
+
+                    <span class="index"></span>
+
+                    <span class="address"></span>
+
+                `;
+
+
+                blocks.appendChild(
+                    element
+                );
+
+
+                requestAnimationFrame(
+                    () => {
+
+                        element.style.top =
+                            '0px';
+
+                        element.style.opacity =
+                            '1';
+
+                    }
+                );
+
+            }
+
+
+            element.style.left =
+                `${layout.start
+                +
+                index *
+                layout.stride}px`;
+
+
+            element.style.top =
+                '0px';
+
+
+            element.className =
+                'block';
+
+
+            if(
+                item.status
+            ){
+
+                element.classList.add(
+                    item.status
+                );
+
+            }
+
+
+            element.querySelector(
+                '.value'
+            ).textContent =
+                item.value;
+
+
+            element.querySelector(
+                '.index'
+            ).textContent =
+                `INDEX ${index}`;
+
+
+            element.querySelector(
+                '.address'
+            ).textContent =
+                base +
+                index * size;
+
+        }
+    );
+
+
+    [
+        ...blocks.children
+    ]
+    .forEach(
+        element => {
+
+            const exists =
+                arrayState.some(
+                    item =>
+                        `block-${item.id}`
+                        ===
+                        element.id
+                );
+
+
+            if(!exists){
+
+                element.classList.add(
+                    'removing'
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        if(
+                            element.parentNode
+                        ){
+
+                            element.remove();
+
+                        }
+
+                    },
+                    360
+                );
+
+            }
+
+        }
+    );
+
+
+    updateStatus();
+
+}
+
+
+/* =========================================================
+   RESET STATUSES
+========================================================= */
+
+function resetStatuses(){
+
+    arrayState.forEach(
+        item => {
+
+            item.status =
+                '';
+
+        }
+    );
+
+
+    render();
+
+}
+
+
+/* =========================================================
+   READ NUMBER
+========================================================= */
+
+function readNumber(
+    id
+){
+
+    const element =
+        $(id);
+
+
+    if(!element)
+        return NaN;
+
+
+    const value =
+        Number(
+            element.value
+        );
+
+
+    if(
+        !Number.isFinite(value)
+    ){
+
+        return NaN;
+
+    }
+
+
+    return Math.trunc(
+        value
+    );
+
+}
+
+
+/* =========================================================
+   OPEN MODE
+========================================================= */
+
+function openMode(
+    mode
+){
+
+    if(locked)
+        return;
+
+
+    currentMode =
+        mode;
+
+
+    hideBinaryMarkers();
+
+
+    const config =
+        configs[mode];
+
+
+    $('formTitle')
+        .textContent =
+        config.title;
+
+
+    $('complexity')
+        .textContent =
+        config.complexity;
+
+
+    $('modeText')
+        .textContent =
+        config.title;
+
+
+    fields.innerHTML =
+        '';
+
+
+    config.fields.forEach(
+        (
+            [
+                id,
+                label,
+                type,
+                value,
+                options = []
+            ]
+        ) => {
+
+
+            const wrapper =
+                document.createElement(
+                    'div'
+                );
+
+
+            wrapper.className =
+                'field';
+
+
+            let control =
+                '';
+
+
+            if(
+                type === 'select'
+            ){
+
+                control = `
+
+                    <select
+                        class="input"
+                        id="field-${id}"
+                        name="${id}"
+                        required
+                    >
+
+                        ${options.map(
+                            option => `
+
+                                <option
+                                    value="${option[0]}"
+                                    ${
+                                        option[0] === value
+                                        ? 'selected'
+                                        : ''
+                                    }
+                                >
+                                    ${option[1]}
+                                </option>
+
+                            `
+                        ).join('')}
+
+                    </select>
+
+                `;
+
+            }
+
+            else{
+
+                control = `
+
+                    <input
+                        class="input"
+                        id="field-${id}"
+                        name="${id}"
+                        type="${type}"
+                        value="${value}"
+                        required
+                    >
+
+                `;
+
+            }
+
+
+            wrapper.innerHTML = `
+
+                <label
+                    for="field-${id}"
+                >
+                    ${label}
+                </label>
+
+                ${control}
+
+            `;
+
+
+            fields.appendChild(
+                wrapper
+            );
+
+        }
+    );
+
+
+    panel.classList.add(
+        'show'
+    );
+
+
+    setTimeout(
+        () => {
+
+            const input =
+                fields.querySelector(
+                    'input'
+                );
+
+
+            if(input){
+
+                input.focus();
+
+                input.select();
+
+            }
+
+        },
+        60
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE MODE
+========================================================= */
+
+function closeMode(){
+
+    panel.classList.remove(
+        'show'
+    );
+
+
+    currentMode =
+        '';
+
+
+    if(!locked){
+
+        $('modeText')
+            .textContent =
+            'IDLE';
+
+    }
+
+}
+
+
+/* =========================================================
+   ADDRESS CALCULATION
+========================================================= */
+
+async function addressCalc(){
+
+    const token =
+        beginAnimation();
+
+
+    clearLog();
+
+    setLocked(true);
+
+
+    const base =
+        readNumber(
+            'field-base'
+        );
+
+
+    const width =
+        readNumber(
+            'field-size'
+        );
+
+
+    const lb =
+        readNumber(
+            'field-lb'
+        );
+
+
+    const index =
+        readNumber(
+            'field-index'
+        );
+
+
+    log(
+        '== ADDRESS CALCULATION ==',
+        'action'
+    );
+
+
+    if(
+        [base,width,lb,index]
+            .some(
+                Number.isNaN
+            )
+        ||
+        width <= 0
+    ){
+
+        log(
+            'Invalid address calculation input.',
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    baseAddress =
+        base;
+
+
+    elementSize =
+        width;
+
+
+    const offset =
+        index -
+        lb;
+
+
+    const address =
+        base +
+        width *
+        offset;
+
+
+    log(
+        'Formula: Address = Base + W × (Index − LB)',
+        'step'
+    );
+
+
+    log(
+        `Offset = ${index} − ${lb} = ${offset}`,
+        'step'
+    );
+
+
+    log(
+        `Address = ${base} + ${width} × ${offset}`,
+        'step'
+    );
+
+
+    log(
+        `Calculated Address = ${address}`,
+        'success'
+    );
+
+
+    soundSuccess();
+
+
+    if(
+        offset >= 0 &&
+        offset < arrayState.length
+    ){
+
+        await marioRunTo(
+            offset,
+            token
+        );
+
+
+        if(!valid(token))
+            return;
+
+
+        arrayState[offset]
+            .status =
+            'found';
+
+
+        render(
+            base,
+            width
+        );
+
+
+        await marioStarPower(
+            token,
+            offset
+        );
+
+
+        resetStatuses();
+
+
+        await marioReturnHome(
+            token
+        );
+
+    }
+
+    else{
+
+        log(
+            'Index is outside the current array.',
+            'info'
+        );
+
+
+        soundFail();
+
+
+        await marioFail(
+            token
+        );
+
+
+        await marioReturnHome(
+            token
+        );
+
+    }
+
+
+    setLocked(false);
+
+    closeMode();
+
+}
+
+
+/* =========================================================
+   INSERTION
+========================================================= */
+
+async function insertion(){
+
+    const token =
+        beginAnimation();
+
+
+    clearLog();
+
+    setLocked(true);
+
+
+    const index =
+        readNumber(
+            'field-index'
+        );
+
+
+    const value =
+        readNumber(
+            'field-value'
+        );
+
+
+    log(
+        '== ARRAY INSERTION ==',
+        'action'
+    );
+
+
+    if(
+        Number.isNaN(index)
+        ||
+        Number.isNaN(value)
+        ||
+        index < 0
+        ||
+        index > arrayState.length
+    ){
+
+        log(
+            `Invalid index. Use 0 to ${arrayState.length}.`,
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    if(
+        arrayState.length >=
+        MAX_SIZE
+    ){
+
+        log(
+            `Array is full. Maximum size is ${MAX_SIZE}.`,
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    log(
+        `Mario runs to insertion point ${index}.`,
+        'step'
+    );
+
+
+    if(
+        index < arrayState.length
+    ){
+
+        await marioRunTo(
+            index,
+            token
+        );
+
+
+        if(!valid(token))
+            return;
+
+
+        await marioHit(
+            token
+        );
+
+
+        if(!valid(token))
+            return;
+
+
+        const layout =
+            getLayout();
+
+
+        log(
+            'Mario hits the block — elements shift right!',
+            'step'
+        );
+
+
+        for(
+            let i =
+                arrayState.length - 1;
+
+            i >= index;
+
+            i--
+        ){
+
+            const item =
+                arrayState[i];
+
+
+            const element =
+                document.getElementById(
+                    `block-${item.id}`
+                );
+
+
+            if(element){
+
+                element.style.left =
+                    `${layout.start
+                    +
+                    (i+1)
+                    *
+                    layout.stride}px`;
+
+            }
+
+
+            log(
+                `${item.value}: ${i} → ${i+1}`,
+                'step'
+            );
+
+
+            await sleep(150);
+
+
+            if(!valid(token))
+                return;
+
+        }
+
+
+        await sleep(250);
+
+    }
+
+
+    const item = {
+
+        id:
+            uid(),
+
+        value:
+            value,
+
+        status:
+            ''
+
+    };
+
+
+    arrayState.splice(
+        index,
+        0,
+        item
+    );
+
+
+    render();
+
+
+    await sleep(220);
+
+
+    if(!valid(token))
+        return;
+
+
+    const insertedElement =
+        document.getElementById(
+            `block-${item.id}`
+        );
+
+
+    if(insertedElement){
+
+        insertedElement.classList.add(
+            'value-pop'
+        );
+
+    }
+
+
+    arrayState[index]
+        .status =
+        'found';
+
+
+    render();
+
+
+    const insertedAfterRender =
+        document.getElementById(
+            `block-${item.id}`
+        );
+
+
+    if(insertedAfterRender){
+
+        insertedAfterRender.classList.add(
+            'value-pop'
+        );
+
+    }
+
+
+    createCoins(
+        index,
+        6
+    );
+
+
+    log(
+        `${value} inserted at index ${index}!`,
+        'success'
+    );
+
+
+    soundSuccess();
+
+
+    await sleep(650);
+
+
+    resetStatuses();
+
+
+    await marioReturnHome(
+        token
+    );
+
+
+    setLocked(false);
+
+    closeMode();
+
+}
+
+
+/* =========================================================
+   DELETION
+========================================================= */
+
+async function deletion(){
+
+    const token =
+        beginAnimation();
+
+
+    clearLog();
+
+    setLocked(true);
+
+
+    const index =
+        readNumber(
+            'field-index'
+        );
+
+
+    log(
+        '== ARRAY DELETION ==',
+        'action'
+    );
+
+
+    if(
+        Number.isNaN(index)
+        ||
+        index < 0
+        ||
+        index >= arrayState.length
+    ){
+
+        log(
+            `Invalid index. Use 0 to ${arrayState.length-1}.`,
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    const deleted =
+        arrayState[index].value;
+
+
+    log(
+        `Mario runs toward ${deleted}.`,
+        'step'
+    );
+
+
+    await marioRunTo(
+        index,
+        token
+    );
+
+
+    if(!valid(token))
+        return;
+
+
+    log(
+        `Mario stomps ${deleted}!`,
+        'step'
+    );
+
+
+    await marioStomp(
+        token
+    );
+
+
+    if(!valid(token))
+        return;
+
+
+    const target =
+        document.getElementById(
+            `block-${arrayState[index].id}`
+        );
+
+
+    if(target){
+
+        target.classList.add(
+            'removing'
+        );
+
+    }
+
+
+    createImpactRing();
+
+
+    createDust(
+        marioScreenPosition()
+    );
+
+
+    await sleep(430);
+
+
+    arrayState.splice(
+        index,
+        1
+    );
+
+
+    render();
+
+
+    await sleep(600);
+
+
+    if(
+        index < arrayState.length
+    ){
+
+        log(
+            'Remaining elements slide left.',
+            'step'
+        );
+
+
+        await sleep(300);
+
+    }
+
+
+    log(
+        `${deleted} deleted successfully!`,
+        'success'
+    );
+
+
+    soundSuccess();
+
+
+    await marioReturnHome(
+        token
+    );
+
+
+    setLocked(false);
+
+    closeMode();
+
+}
+
+
+/* =========================================================
+   LINEAR SEARCH
+========================================================= */
+
+async function linearSearch(){
+
+    const token =
+        beginAnimation();
+
+
+    clearLog();
+
+    setLocked(true);
+
+
+    const target =
+        readNumber(
+            'field-value'
+        );
+
+
+    log(
+        '== LINEAR SEARCH ==',
+        'action'
+    );
+
+
+    if(
+        Number.isNaN(target)
+    ){
+
+        log(
+            'Invalid search value.',
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    if(
+        !arrayState.length
+    ){
+
+        log(
+            'Array is empty.',
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    resetStatuses();
+
+
+    log(
+        `Mario searches for ${target}.`
+    );
+
+
+    for(
+        let i=0;
+
+        i<arrayState.length;
+
+        i++
+    ){
+
+        if(!valid(token))
+            return;
+
+
+        arrayState.forEach(
+            item => {
+
+                if(
+                    item.status ===
+                    'check'
+                ){
+
+                    item.status =
+                        'disabled';
+
+                }
+
+            }
+        );
+
+
+        arrayState[i]
+            .status =
+            'check';
+
+
+        render();
+
+
+        await marioRunTo(
+            i,
+            token
+        );
+
+
+        if(!valid(token))
+            return;
+
+
+        soundSearch();
+
+
+        log(
+            `Checking index ${i}: ${arrayState[i].value}`,
+            'step'
+        );
+
+
+        await sleep(300);
+
+
+        if(
+            arrayState[i].value ===
+            target
+        ){
+
+            arrayState[i]
+                .status =
+                'found';
+
+
+            render();
+
+
+            log(
+                `MARIO FOUND ${target} at index ${i}!`,
+                'success'
+            );
+
+
+            soundSuccess();
+
+
+            await marioStarPower(
+                token,
+                i
+            );
+
+
+            resetStatuses();
+
+
+            await marioReturnHome(
+                token
+            );
+
+
+            setLocked(false);
+
+            closeMode();
+
+            return;
+
+        }
+
+
+        arrayState[i]
+            .status =
+            'disabled';
+
+
+        render();
+
+
+        await sleep(180);
+
+    }
+
+
+    log(
+        `Mario couldn't find ${target}.`,
+        'error'
+    );
+
+
+    soundFail();
+
+
+    await marioFail(
+        token
+    );
+
+
+    resetStatuses();
+
+
+    await marioReturnHome(
+        token
+    );
+
+
+    setLocked(false);
+
+    closeMode();
+
+}
+
+
+/* =========================================================
+   SORTING FOR BINARY SEARCH
+========================================================= */
+
+async function animateSortCompare(
+    i,
+    j,
+    token
+){
+
+    if(!valid(token))
+        return false;
+
+
+    arrayState.forEach(
+        item =>
+            item.status = ''
+    );
+
+
+    if(
+        i >= 0 &&
+        i < arrayState.length
+    ){
+
+        arrayState[i].status =
+            'check';
+
+    }
+
+
+    if(
+        j >= 0 &&
+        j < arrayState.length
+    ){
+
+        arrayState[j].status =
+            'check';
+
+    }
+
+
+    render();
+
+
+    soundCompare();
+
+
+    log(
+        `Comparing index ${i} (${arrayState[i].value}) and index ${j} (${arrayState[j].value}).`,
+        'step'
+    );
+
+
+    await sleep(260);
+
+
+    return valid(token);
+
+}
+
+
+function swapArrayItems(
+    i,
+    j
+){
+
+    const temp =
+        arrayState[i];
+
+    arrayState[i] =
+        arrayState[j];
+
+    arrayState[j] =
+        temp;
+
+
+    soundSwap();
+
+}
+
+
+/* =========================================================
+   BUBBLE SORT
+========================================================= */
+
+async function bubbleSort(
+    token
+){
+
+    log(
+        '== BUBBLE SORT ==',
+        'action'
+    );
+
+
+    const n =
+        arrayState.length;
+
+
+    for(
+        let i=0;
+        i<n-1;
+        i++
+    ){
+
+        let swapped =
+            false;
+
+
+        for(
+            let j=0;
+            j<n-i-1;
+            j++
+        ){
+
+            if(
+                !await animateSortCompare(
+                    j,
+                    j+1,
+                    token
+                )
+            )
+                return false;
+
+
+            if(
+                arrayState[j].value >
+                arrayState[j+1].value
+            ){
+
+                swapArrayItems(
+                    j,
+                    j+1
+                );
+
+
+                swapped =
+                    true;
+
+
+                render();
+
+
+                log(
+                    `Swap → ${arrayState[j].value} and ${arrayState[j+1].value}.`,
+                    'info'
+                );
+
+
+                await sleep(220);
+
+            }
+
+        }
+
+
+        if(!swapped)
+            break;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   INSERTION SORT
+========================================================= */
+
+async function insertionSort(
+    token
+){
+
+    log(
+        '== INSERTION SORT ==',
+        'action'
+    );
+
+
+    for(
+        let i=1;
+        i<arrayState.length;
+        i++
+    ){
+
+        const key =
+            arrayState[i];
+
+
+        let j =
+            i-1;
+
+
+        log(
+            `Insert ${key.value} into the sorted portion.`,
+            'step'
+        );
+
+
+        while(
+            j >= 0 &&
+            arrayState[j].value >
+            key.value
+        ){
+
+            if(
+                !await animateSortCompare(
+                    j,
+                    j+1,
+                    token
+                )
+            )
+                return false;
+
+
+            arrayState[j+1] =
+                arrayState[j];
+
+
+            render();
+
+
+            log(
+                `Shift ${arrayState[j].value} one position right.`,
+                'info'
+            );
+
+
+            await sleep(220);
+
+
+            j--;
+
+        }
+
+
+        arrayState[j+1] =
+            key;
+
+
+        render();
+
+
+        await sleep(220);
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   SELECTION SORT
+========================================================= */
+
+async function selectionSort(
+    token
+){
+
+    log(
+        '== SELECTION SORT ==',
+        'action'
+    );
+
+
+    const n =
+        arrayState.length;
+
+
+    for(
+        let i=0;
+        i<n-1;
+        i++
+    ){
+
+        let minIndex =
+            i;
+
+
+        for(
+            let j=i+1;
+            j<n;
+            j++
+        ){
+
+            if(
+                !await animateSortCompare(
+                    minIndex,
+                    j,
+                    token
+                )
+            )
+                return false;
+
+
+            if(
+                arrayState[j].value <
+                arrayState[minIndex].value
+            ){
+
+                minIndex =
+                    j;
+
+
+                log(
+                    `New minimum: ${arrayState[minIndex].value}.`,
+                    'info'
+                );
+
+            }
+
+        }
+
+
+        if(
+            minIndex !== i
+        ){
+
+            swapArrayItems(
+                i,
+                minIndex
+            );
+
+
+            render();
+
+
+            log(
+                `Place ${arrayState[i].value} at index ${i}.`,
+                'info'
+            );
+
+
+            await sleep(300);
+
+        }
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   QUICK SORT
+========================================================= */
+
+async function quickSort(token){
+
+    log('== QUICK SORT ==','action');
+
+    async function partition(low, high){
+        const pivot = arrayState[high].value;
+        log(`Choose ${pivot} as the pivot (last element).`,'step');
+        let i = low - 1;
+
+        for(let j = low; j < high; j++){
+            if(!await animateSortCompare(j, high, token)) return null;
+
+            if(arrayState[j].value <= pivot){
+                i++;
+                if(i !== j){
+                    swapArrayItems(i,j);
+                    render();
+                    log(`Move ${arrayState[i].value} to the left of the pivot.`,'info');
+                    await sleep(220);
+                }
+            }
+        }
+
+        if(i + 1 !== high){
+            swapArrayItems(i + 1, high);
+            render();
+            log(`Place pivot ${arrayState[i + 1].value} at index ${i + 1}.`,'info');
+            await sleep(260);
+        }
+        return i + 1;
+    }
+
+    async function quick(low, high){
+        if(low >= high) return true;
+        const pivotIndex = await partition(low, high);
+        if(pivotIndex === null) return false;
+        if(!await quick(low, pivotIndex - 1)) return false;
+        return await quick(pivotIndex + 1, high);
+    }
+
+    return await quick(0, arrayState.length - 1);
+}
+
+
+/* =========================================================
+   MERGE SORT
+========================================================= */
+
+async function mergeSort(token){
+
+    log('== MERGE SORT ==','action');
+
+    async function merge(left, mid, right){
+        const leftItems = arrayState.slice(left, mid + 1);
+        const rightItems = arrayState.slice(mid + 1, right + 1);
+        let i = 0, j = 0, k = left;
+
+        log(`Merge the sections ${left}–${mid} and ${mid + 1}–${right}.`,'step');
+
+        while(i < leftItems.length && j < rightItems.length){
+            if(!await animateSortCompare(left + i, mid + 1 + j, token)) return false;
+
+            if(leftItems[i].value <= rightItems[j].value){
+                arrayState[k++] = leftItems[i++];
+            }else{
+                arrayState[k++] = rightItems[j++];
+            }
+            render();
+            await sleep(180);
+        }
+
+        while(i < leftItems.length){
+            arrayState[k++] = leftItems[i++];
+            render();
+            await sleep(140);
+        }
+        while(j < rightItems.length){
+            arrayState[k++] = rightItems[j++];
+            render();
+            await sleep(140);
+        }
+
+        log(`Merged section: [${arrayState.slice(left, right + 1).map(item => item.value).join(', ')}].`,'info');
+        return valid(token);
+    }
+
+    async function divide(left, right){
+        if(left >= right) return true;
+        const mid = Math.floor((left + right) / 2);
+        log(`Divide range ${left}–${right} at midpoint ${mid}.`,'step');
+        if(!await divide(left, mid)) return false;
+        if(!await divide(mid + 1, right)) return false;
+        return await merge(left, mid, right);
+    }
+
+    return await divide(0, arrayState.length - 1);
+}
+
+
+/* =========================================================
+   SHELL SORT
+========================================================= */
+
+async function shellSort(token){
+
+    log('== SHELL SORT ==','action');
+
+    const n = arrayState.length;
+    for(let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)){
+        log(`Current gap = ${gap}.`,'step');
+
+        for(let i = gap; i < n; i++){
+            const temp = arrayState[i];
+            let j = i;
+
+            while(j >= gap){
+                if(!await animateSortCompare(j - gap, j, token)) return false;
+                if(arrayState[j - gap].value <= temp.value) break;
+
+                arrayState[j] = arrayState[j - gap];
+                render();
+                log(`Shift ${arrayState[j].value} from index ${j - gap} to ${j}.`,'info');
+                await sleep(200);
+                j -= gap;
+            }
+
+            arrayState[j] = temp;
+            render();
+            await sleep(160);
+        }
+    }
+
+    return true;
+}
+
+
+/* =========================================================
+   RADIX SORT (supports positive and negative integers)
+========================================================= */
+
+async function radixSort(token){
+
+    log('== RADIX SORT ==','action');
+
+    if(arrayState.length < 2) return true;
+
+    const values = arrayState.map(item => item.value);
+    if(!values.every(Number.isInteger)){
+        log('Radix Sort requires integer values.','error');
+        return false;
+    }
+
+    // Shifting all values by the minimum keeps their order and
+    // allows the LSD counting passes to handle negative integers too.
+    const minValue = Math.min(...values);
+    const maxOffset = Math.max(...values.map(value => value - minValue));
+
+    for(let exp = 1; Math.floor(maxOffset / exp) > 0; exp *= 10){
+        if(!valid(token)) return false;
+        const offsets = arrayState.map(item => item.value - minValue);
+        const count = new Array(10).fill(0);
+        const output = new Array(arrayState.length);
+
+        offsets.forEach(offset => {
+            const digit = Math.floor(offset / exp) % 10;
+            count[digit]++;
+        });
+        for(let d = 1; d < 10; d++) count[d] += count[d - 1];
+
+        for(let i = arrayState.length - 1; i >= 0; i--){
+            const digit = Math.floor(offsets[i] / exp) % 10;
+            output[--count[digit]] = arrayState[i];
+        }
+
+        for(let i = 0; i < output.length; i++){
+            arrayState[i] = output[i];
+            render();
+            await sleep(100);
+            if(!valid(token)) return false;
+        }
+
+        log(`Completed digit pass (place value ${exp}).`,'info');
+    }
+
+    return true;
+}
+
+
+/* =========================================================
+   SORT FOR BINARY SEARCH
+========================================================= */
+
+async function sortForBinarySearch(
+    method,
+    token
+){
+
+    resetStatuses();
+
+
+    let success =
+        false;
+
+
+    if(
+        method ===
+        'bubble'
+    ){
+
+        success =
+            await bubbleSort(
+                token
+            );
+
+    }
+
+    else if(
+        method ===
+        'insertion'
+    ){
+
+        success =
+            await insertionSort(
+                token
+            );
+
+    }
+
+    else if(
+        method ===
+        'selection'
+    ){
+
+        success =
+            await selectionSort(
+                token
+            );
+
+    }
+
+    else if(method === 'quick'){
+        success = await quickSort(token);
+    }
+
+    else if(method === 'merge'){
+        success = await mergeSort(token);
+    }
+
+    else if(method === 'shell'){
+        success = await shellSort(token);
+    }
+
+    else if(method === 'radix'){
+        success = await radixSort(token);
+    }
+
+
+    if(!success)
+        return false;
+
+
+    resetStatuses();
+
+
+    log(
+        `Sorted array = [${arrayState
+            .map(
+                item =>
+                    item.value
+            )
+            .join(', ')}]`,
+        'success'
+    );
+
+
+    soundSortComplete();
+
+
+    await sleep(500);
+
+
+    return valid(token);
+
+}
+
+
+/* =========================================================
+   BINARY SEARCH
+========================================================= */
+
+async function binarySearch(){
+
+    const token =
+        beginAnimation();
+
+
+    clearLog();
+
+    setLocked(true);
+
+
+    const target =
+        readNumber(
+            'field-value'
+        );
+
+
+    log(
+        '== BINARY SEARCH ==',
+        'action'
+    );
+
+
+    if(
+        Number.isNaN(target)
+    ){
+
+        log(
+            'Invalid search value.',
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    if(
+        !arrayState.length
+    ){
+
+        log(
+            'Array is empty.',
+            'error'
+        );
+
+
+        soundFail();
+
+
+        marioIdle();
+
+        setLocked(false);
+
+        return;
+
+    }
+
+
+    const sorted =
+        arrayState.every(
+            (
+                item,
+                index,
+                arr
+            ) =>
+
+                index === 0
+
+                ||
+
+                arr[index-1].value
+                <=
+                item.value
+
+        );
+
+
+    if(!sorted){
+
+        const sortMethod =
+            $('field-sort')
+                ?
+                $('field-sort').value
+                :
+                'bubble';
+
+
+        const sortNames = {
+
+            bubble:
+                'Bubble Sort',
+
+            insertion:
+                'Insertion Sort',
+
+            selection:
+                'Selection Sort',
+
+            quick:
+                'Quick Sort',
+
+            merge:
+                'Merge Sort',
+
+            shell:
+                'Shell Sort',
+
+            radix:
+                'Radix Sort'
+
+        };
+
+
+        log(
+            'Binary search requires sorted data.',
+            'step'
+        );
+
+
+        log(
+            `Sorting method: ${
+                sortNames[sortMethod]
+                ||
+                'Bubble Sort'
+            }.`,
+            'info'
+        );
+
+
+        const sortedSuccessfully =
+            await sortForBinarySearch(
+                sortMethod,
+                token
+            );
+
+
+        if(!sortedSuccessfully)
+            return;
+
+    }
+
+
+    let low =
+        0;
+
+
+    let high =
+        arrayState.length - 1;
+
+
+    while(
+        low <= high
+    ){
+
+        if(!valid(token))
+            return;
+
+
+        arrayState.forEach(
+            item =>
+                item.status=''
+        );
+
+
+        for(
+            let i=0;
+            i<low;
+            i++
+        ){
+
+            arrayState[i]
+                .status =
+                'disabled';
+
+        }
+
+
+        for(
+            let i=high+1;
+            i<arrayState.length;
+            i++
+        ){
+
+            arrayState[i]
+                .status =
+                'disabled';
+
+        }
+
+
+        render();
+
+
+        const mid =
+            Math.floor(
+                (low+high)/2
+            );
+
+
+        showBinaryMarkers(
+            low,
+            mid,
+            high
+        );
+
+
+        log(
+            `LOW=${low}   MID=${mid}   HIGH=${high}`,
+            'step'
+        );
+
+
+        await marioRunTo(
+            mid,
+            token
+        );
+
+
+        if(!valid(token))
+            return;
+
+
+        arrayState[mid]
+            .status =
+            'check';
+
+
+        render();
+
+
+        soundSearch();
+
+
+        log(
+            `Mario checks ${arrayState[mid].value}.`,
+            'step'
+        );
+
+
+        await sleep(450);
+
+
+        if(
+            arrayState[mid].value ===
+            target
+        ){
+
+            arrayState[mid]
+                .status =
+                'found';
+
+
+            render();
+
+
+            log(
+                `BINGO! Mario found ${target} at index ${mid}!`,
+                'success'
+            );
+
+
+            soundSuccess();
+
+
+            await marioStarPower(
+                token,
+                mid
+            );
+
+
+            resetStatuses();
+
+
+            hideBinaryMarkers();
+
+
+            await marioReturnHome(
+                token
+            );
+
+
+            setLocked(false);
+
+            closeMode();
+
+            return;
+
+        }
+
+
+        if(
+            arrayState[mid].value <
+            target
+        ){
+
+            log(
+                `${arrayState[mid].value} < ${target} → move right.`,
+                'info'
+            );
+
+
+            for(
+                let i=low;
+                i<=mid;
+                i++
+            ){
+
+                arrayState[i]
+                    .status =
+                    'disabled';
+
+            }
+
+
+            low =
+                mid+1;
+
+        }
+
+        else{
+
+            log(
+                `${arrayState[mid].value} > ${target} → move left.`,
+                'info'
+            );
+
+
+            for(
+                let i=mid;
+                i<=high;
+                i++
+            ){
+
+                arrayState[i]
+                    .status =
+                    'disabled';
+
+            }
+
+
+            high =
+                mid-1;
+
+        }
+
+
+        render();
+
+
+        await sleep(450);
+
+    }
+
+
+    log(
+        `Mario couldn't find ${target}.`,
+        'error'
+    );
+
+
+    soundFail();
+
+
+    await marioFail(
+        token
+    );
+
+
+    resetStatuses();
+
+
+    hideBinaryMarkers();
+
+
+    await marioReturnHome(
+        token
+    );
+
+
+    setLocked(false);
+
+    closeMode();
+
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+form.addEventListener(
+    'submit',
+    async event => {
+
+        event.preventDefault();
+
+
+        if(locked)
+            return;
+
+
+        try{
+
+            if(
+                currentMode ===
+                'address'
+            ){
+
+                await addressCalc();
+
+            }
+
+            else if(
+                currentMode ===
+                'insert'
+            ){
+
+                await insertion();
+
+            }
+
+            else if(
+                currentMode ===
+                'delete'
+            ){
+
+                await deletion();
+
+            }
+
+            else if(
+                currentMode ===
+                'linear'
+            ){
+
+                await linearSearch();
+
+            }
+
+            else if(
+                currentMode ===
+                'binary'
+            ){
+
+                await binarySearch();
+
+            }
+
+        }
+
+        catch(error){
+
+            console.error(
+                error
+            );
+
+
+            animationToken++;
+
+
+            marioIdle();
+
+
+            log(
+                `Unexpected error: ${error.message}`,
+                'error'
+            );
+
+
+            setLocked(false);
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+$('cancelBtn')
+.addEventListener(
+    'click',
+    () => {
+
+        if(locked)
+            return;
+
+
+        animationToken++;
+
+
+        marioIdle();
+
+
+        closeMode();
+
+    }
+);
+
+
+/* =========================================================
+   OPERATION BUTTONS
+========================================================= */
+
+document
+.querySelectorAll(
+    '.controls .btn'
+)
+.forEach(
+    button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                resumeAudio();
+
+                soundClick();
+
+                openMode(
+                    button.dataset.mode
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+$('resetBtn')
+.addEventListener(
+    'click',
+    () => {
+
+        if(!locked){
+
+            resumeAudio();
+
+            soundClick();
+
+            resetGame();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    'resize',
+    () => {
+
+        if(!locked){
+
+            render();
+
+
+            repositionBinaryMarkers();
+
+
+            if(
+                mario.classList.contains(
+                    'idle'
+                )
+            ){
+
+                mario.style.left =
+                    '24px';
+
+            }
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESET GAME
+========================================================= */
+
+function resetGame(){
+
+    animationToken++;
+
+
+    hideBinaryMarkers();
+
+
+    locked =
+        false;
+
+
+    marioResetToHome();
+
+
+    clearLog();
+
+
+    closeMode();
+
+
+    const values = [
+
+        45,
+
+        12,
+
+        78,
+
+        34,
+
+        89,
+
+        23,
+
+        56
+
+    ];
+
+
+    arrayState =
+        values.map(
+            value => ({
+
+                id:
+                    uid(),
+
+                value:
+                    value,
+
+                status:
+                    ''
+
+            })
+        );
+
+
+    baseAddress =
+        DEFAULT_BASE;
+
+
+    elementSize =
+        DEFAULT_ELEMENT_SIZE;
+
+
+    $('complexity')
+        .textContent =
+        '—';
+
+
+    $('modeText')
+        .textContent =
+        'IDLE';
+
+
+    $('operationHud')
+        .textContent =
+        'READY';
+
+
+    render();
+
+
+    log(
+        'SUPER ARRAY BROS WORLD LOADED!',
+        'success'
+    );
+
+
+    log(
+        `Initial array: [${values.join(', ')}]`
+    );
+
+
+    log(
+        'Mario is ready! Choose an operation.',
+        'info'
+    );
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+resetGame();
+
+</script>
+
+</body>
+</html>
